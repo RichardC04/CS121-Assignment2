@@ -12,6 +12,7 @@ class Frontier(object):
         self.logger = get_logger("FRONTIER")
         self.config = config
         self.to_be_downloaded = list()
+        self.depth_alert = 5
         
         if not os.path.exists(self.config.save_file) and not restart:
             # Save file does not exist, but request to load save.
@@ -39,21 +40,29 @@ class Frontier(object):
         ''' This function can be overridden for alternate saving techniques. '''
         total_count = len(self.save)
         tbd_count = 0
-        for url, completed in self.save.values():
+        """for url, completed in self.save.values():
             if not completed and is_valid(url):
                 self.to_be_downloaded.append(url)
                 tbd_count += 1
         self.logger.info(
             f"Found {tbd_count} urls to be downloaded from {total_count} "
-            f"total urls discovered.")
-
+            f"total urls discovered.")"""
+        for urlhash, (url, completed, depth) in self.save.items():
+            if not completed and is_valid(url) and depth < self.max_depth:
+                self.to_be_downloaded.append((url, depth))
+                tbd_count += 1
+        self.logger.info(
+            f"Found {tbd_count} urls to be downloaded from {total_count} total urls discovered.")
+    
     def get_tbd_url(self):
         try:
             return self.to_be_downloaded.pop()
         except IndexError:
             return None
 
-    def add_url(self, url):
+    def add_url(self, url, depth):
+        if depth > self.depth_alert:
+            return
         url = normalize(url)
         urlhash = get_urlhash(url)
         if urlhash not in self.save:
@@ -63,10 +72,17 @@ class Frontier(object):
     
     def mark_url_complete(self, url):
         urlhash = get_urlhash(url)
-        if urlhash not in self.save:
+        if urlhash in self.save:
+            _, _, depth = self.save[urlhash]
+            self.save[urlhash] = (url, True, depth)
+            self.save.sync()
+        else:
+            self.logger.error(
+                f"Completed url {url}, but have not seen it before.")
+        """if urlhash not in self.save:
             # This should not happen.
             self.logger.error(
                 f"Completed url {url}, but have not seen it before.")
 
         self.save[urlhash] = (url, True)
-        self.save.sync()
+        self.save.sync()"""
