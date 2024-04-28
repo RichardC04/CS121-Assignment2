@@ -28,7 +28,7 @@ class Frontier(object):
         self.save = shelve.open(self.config.save_file)
         if restart:
             for url in self.config.seed_urls:
-                self.add_url(url)
+                self.add_url(url, 0)
         else:
             # Set the frontier state with contents of save file.
             self._parse_save_file()
@@ -48,7 +48,7 @@ class Frontier(object):
             f"Found {tbd_count} urls to be downloaded from {total_count} "
             f"total urls discovered.")"""
         for urlhash, (url, completed, depth) in self.save.items():
-            if not completed and is_valid(url) and depth < self.max_depth:
+            if not completed and is_valid(url) and depth < self.depth_alert:
                 self.to_be_downloaded.append((url, depth))
                 tbd_count += 1
         self.logger.info(
