@@ -16,7 +16,7 @@ def extract_next_links(url, resp):
     #         resp.raw_response.url: the url, again
     #         resp.raw_response.content: the content of the page!
     # Return a list with the hyperlinks (as strings) scrapped from resp.raw_response.content
-    if resp.status != 200 or not resp.raw_response.content:
+    if resp.status != 200 or not resp.raw_response.content or 'text/html' not in resp.headers.get('Content-Type', ''):
         return []  # Ignore non-200 responses and empty content
 
     soup = BeautifulSoup(resp.raw_response.content, 'html.parser')
