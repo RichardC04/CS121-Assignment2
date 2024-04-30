@@ -38,7 +38,7 @@ def is_valid(url):
         if parsed.scheme not in set(["http", "https"]):
             return False
         valid_domains = [
-            ".ics.cui.edu",
+            ".ics.uci.edu",
             ".cs.uci.edu",
             ".informatics.uci.edu",
             ".stat.uci.edu"
