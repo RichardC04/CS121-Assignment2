@@ -1,10 +1,22 @@
 import re
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse, urljoin
+from urllib.robotparser import RobotFileParser
 
 def scraper(url, resp):
     links = extract_next_links(url, resp)
     return [link for link in links if is_valid(link)]
+
+robots_cache = {}
+def can_fetch_robot(url):
+    parsed_url = urlparse(url)
+    root_url = f"{parsed_url.scheme}://{parsed_url.netloc}"
+    if root_url not in robots_cache:
+        rp = RobotFileParser()
+        rp.set_url(f"{root_url}/robots.txt")
+        rp.read()
+        robots_cache[root_url] = rp
+    return robots_cache[root_url].can_fetch("*", url)
 
 def extract_next_links(url, resp):
     # Implementation required.
@@ -24,7 +36,7 @@ def extract_next_links(url, resp):
 
     for link in soup.find_all('a', href=True):
         abs_url = urljoin(resp.url, link['href'])
-        if is_valid(abs_url):
+        if is_valid(abs_url) and can_fetch_robot(abs_url):
             found_links.add(abs_url)
 
     return list(found_links)
