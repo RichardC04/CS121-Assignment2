@@ -2,10 +2,22 @@ import re
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse, urljoin
 from urllib.robotparser import RobotFileParser
+from simhash_detection import page_content, detect_near_duplicates
 
 def scraper(url, resp):
     links = extract_next_links(url, resp)
     return [link for link in links if is_valid(link)]
+
+def extract_content(html_content):
+    """Extract plain text content from HTML, removing all scripts and styles."""
+    soup = BeautifulSoup(html_content, 'html.parser')
+    for script_or_style in soup(["script", "style"]):
+        script_or_style.decompose()
+    text = soup.get_text()
+    lines = (line.strip() for line in text.splitlines())
+    chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
+    text = '\n'.join(chunk for chunk in chunks if chunk)
+    return text
 
 robots_cache = {}
 def can_fetch_robot(url):
@@ -30,10 +42,12 @@ def extract_next_links(url, resp):
     # Return a list with the hyperlinks (as strings) scrapped from resp.raw_response.content
     if resp.status != 200 or not resp.raw_response.content or 'text/html' not in resp.headers.get('Content-Type', ''):
         return []  # Ignore non-200 responses and empty content
-
+    content = extract_content(resp.raw_response.content)
+    page_simhash = page_content(url, content)
+    if detect_near_duplicates(url, page_simhash):
+        return []
     soup = BeautifulSoup(resp.raw_response.content, 'html.parser')
     found_links = set()
-
     for link in soup.find_all('a', href=True):
         abs_url = urljoin(resp.url, link['href'])
         if is_valid(abs_url) and can_fetch_robot(abs_url):
