@@ -1,8 +1,11 @@
 import os
 import shelve
+import re
 
 from threading import Thread, RLock
 from queue import Queue, Empty
+from collections import Counter
+from urllib.parse import urlparse
 
 from utils import get_logger, get_urlhash, normalize
 from scraper import is_valid
@@ -13,6 +16,10 @@ class Frontier(object):
         self.config = config
         self.to_be_downloaded = list()
         self.depth_alert = 5
+        self.unique_urls = set()
+        self.subdomains = Counter()
+        self.word_counter = Counter()
+        self.longest_page = ('', 0)
         
         if not os.path.exists(self.config.save_file) and not restart:
             # Save file does not exist, but request to load save.
@@ -86,3 +93,31 @@ class Frontier(object):
 
         self.save[urlhash] = (url, True)
         self.save.sync()"""
+    
+    def add_page(self, url, content):
+        url = normalize(url).split('#')[0]
+        if url not in self.unique_urls:
+            self.unique_urls.add(url)
+            subdomain = urlparse(url).netloc
+            self.subdomains[subdomain] += 1
+
+            words = self.process_content(content)
+            self.word_counter.update(words)
+            if len(words) > self.longest_page[1]:
+                self.longest_page = (url, len(words))
+    
+    def process_content(self, content):
+        text = re.sub('<[^<]+?>', '', content)
+        words = re.findall(r'\w+', text.lower())
+        return words
+
+    def generate_report(self, filename='report.txt'):
+        with open(filename, 'w') as file:
+            file.write(f"Total unique pages: {len(self.unique_urls)}\n")
+            file.write(f"Longest page: {self.longest_page[0]} with {self.longest_page[1]} words\n")
+            file.write("Most common words:\n")
+            for word, count in self.word_counter.most_common(50):
+                file.write(f"{word}: {count}\n")
+            file.write("Subdomains in ics.uci.edu:\n")
+            for subdomain, count in self.subdomains.items():
+                file.write(f"{subdomain}: {count}\n")
