@@ -19,10 +19,11 @@ class Worker(Thread):
         
     def run(self):
         while True:
-            tbd_url = self.frontier.get_tbd_url()
-            if not tbd_url:
+            tbd_url_data = self.frontier.get_tbd_url()
+            if not tbd_url_data:
                 self.logger.info("Frontier is empty. Stopping Crawler.")
                 break
+            tbd_url, depth = tbd_url_data
             resp = download(tbd_url, self.config, self.logger)
             self.logger.info(
                 f"Downloaded {tbd_url}, status <{resp.status}>, "
