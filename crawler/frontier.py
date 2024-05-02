@@ -39,9 +39,6 @@ class Frontier(object):
         else:
             # Set the frontier state with contents of save file.
             self._parse_save_file()
-            if not self.save:
-                for url in self.config.seed_urls:
-                    self.add_url(url)
 
     def _parse_save_file(self):
         ''' This function can be overridden for alternate saving techniques. '''
@@ -67,15 +64,15 @@ class Frontier(object):
         except IndexError:
             return None
 
-    def add_url(self, url, depth=5):
+    def add_url(self, url, depth):
         if depth > self.depth_alert:
             return
         url = normalize(url)
         urlhash = get_urlhash(url)
         if urlhash not in self.save:
-            self.save[urlhash] = (url, False)
+            self.save[urlhash] = (url, False, depth)
             self.save.sync()
-            self.to_be_downloaded.append(url)
+            self.to_be_downloaded.append((url, depth +1))
     
     def mark_url_complete(self, url):
         urlhash = get_urlhash(url)
