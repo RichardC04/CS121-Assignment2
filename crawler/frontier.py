@@ -67,7 +67,7 @@ class Frontier(object):
         except IndexError:
             return None
 
-    def add_url(self, url, depth):
+    def add_url(self, url, depth=5):
         if depth > self.depth_alert:
             return
         url = normalize(url)
