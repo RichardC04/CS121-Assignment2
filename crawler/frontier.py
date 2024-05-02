@@ -51,7 +51,12 @@ class Frontier(object):
         self.logger.info(
             f"Found {tbd_count} urls to be downloaded from {total_count} "
             f"total urls discovered.")"""
-        for urlhash, (url, completed, depth) in self.save.items():
+        for urlhash, entry in self.save.items():
+            if len(entry) == 2:
+                url, completed = entry
+                depth = 0
+            else:
+                url, completed, depth = entry
             if not completed and is_valid(url) and depth < self.depth_alert:
                 self.to_be_downloaded.append((url, depth))
                 tbd_count += 1
