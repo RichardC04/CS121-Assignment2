@@ -81,8 +81,13 @@ class Frontier(object):
     
     def mark_url_complete(self, url):
         urlhash = get_urlhash(url)
-        if urlhash in self.save:
-            _, _, depth = self.save[urlhash]
+        entry = self.save.get(urlhash)
+        if entry:
+            if len(entry) == 2:
+                url, completed = entry
+                depth = 0 
+            elif len(entry) == 3:
+                url, completed, depth = entry
             self.save[urlhash] = (url, True, depth)
             self.save.sync()
         else:
