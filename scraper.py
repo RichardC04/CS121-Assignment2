@@ -19,6 +19,16 @@ def extract_content(html_content):
     text = '\n'.join(chunk for chunk in chunks if chunk)
     return text
 
+def error_content(content):
+    error_indicators = [
+        "404 Not Found", "Error 404", "Page Not Found",
+        "Sorry, we couldn’t find that page", "The requested URL was not found"
+    ]
+    for indicator in error_indicators:
+        if indicator.lower() in content.lower():
+            return True
+    return False
+
 robots_cache = {}
 def can_fetch_robot(url):
     parsed_url = urlparse(url)
@@ -44,6 +54,8 @@ def extract_next_links(url, resp):
         return []  # Ignore non-200 responses and empty content
     soup = BeautifulSoup(resp.raw_response.content, 'html.parser')
     content = extract_content(soup)
+    if error_content(content):
+        return []
     page_simhash = page_content(url, content)
     if detect_near_duplicates(url, page_simhash):
         return [] #Ignore urls with great page similarity
