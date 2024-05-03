@@ -8,9 +8,9 @@ def scraper(url, resp):
     links = extract_next_links(url, resp)
     return [link for link in links if is_valid(link)]
 
-def extract_content(html_content):
-    """Extract plain text content from HTML, removing all scripts and styles."""
-    soup = BeautifulSoup(html_content, 'html.parser')
+def extract_content(soup):
+    """Extract plain text content from HTML, 
+    removing all scripts and styles."""
     for script_or_style in soup(["script", "style"]):
         script_or_style.decompose()
     text = soup.get_text()
