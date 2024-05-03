@@ -38,13 +38,6 @@ class Frontier(object):
         ''' This function can be overridden for alternate saving techniques. '''
         total_count = len(self.save)
         tbd_count = 0
-        """for url, completed in self.save.values():
-            if not completed and is_valid(url):
-                self.to_be_downloaded.append(url)
-                tbd_count += 1
-        self.logger.info(
-            f"Found {tbd_count} urls to be downloaded from {total_count} "
-            f"total urls discovered.")"""
         for urlhash, entry in self.save.items():
             if len(entry) == 2:
                 url, completed = entry
@@ -87,10 +80,4 @@ class Frontier(object):
         else:
             self.logger.error(
                 f"Completed url {url}, but have not seen it before.")
-        """if urlhash not in self.save:
-            # This should not happen.
-            self.logger.error(
-                f"Completed url {url}, but have not seen it before.")
-
-        self.save[urlhash] = (url, True)
-        self.save.sync()"""
+ 
