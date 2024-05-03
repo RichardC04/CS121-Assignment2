@@ -1,10 +1,8 @@
 import os
 import shelve
-import re
 
 from threading import Thread, RLock
 from queue import Queue, Empty
-from collections import Counter
 from urllib.parse import urlparse
 
 from utils import get_logger, get_urlhash, normalize
@@ -16,10 +14,6 @@ class Frontier(object):
         self.config = config
         self.to_be_downloaded = list()
         self.depth_alert = 5
-        self.unique_urls = set()
-        self.subdomains = Counter()
-        self.word_counter = Counter()
-        self.longest_page = ('', 0)
         
         if not os.path.exists(self.config.save_file) and not restart:
             # Save file does not exist, but request to load save.
@@ -86,54 +80,4 @@ class Frontier(object):
         else:
             self.logger.error(
                 f"Completed url {url}, but have not seen it before.")
-    
-    def add_page(self, url, content):
-        url = normalize(url).split('#')[0]
-        if url not in self.unique_urls:
-            self.unique_urls.add(url)
-            subdomain = urlparse(url).netloc
-            self.subdomains[subdomain] += 1
-
-            words = self.process_content(content)
-            self.word_counter.update(words)
-            if len(words) > self.longest_page[1]:
-                self.longest_page = (url, len(words))
-    
-    def process_content(self, content):
-        stop_words = {
-            'a', 'about', 'above', 'after', 'again', 'against', 'all', 'am', 'an', 'and', 'any', 'are', "aren't", 'as', 'at',
-            'be', 'because', 'been', 'before', 'being', 'below', 'between', 'both', 'but', 'by',
-            "can't", 'cannot', 'could', "couldn't",
-            'did', "didn't", 'do', 'does', "doesn't", 'doing', "don't", 'down', 'during',
-            'each',
-            'few', 'for', 'from', 'further',
-            'had', "hadn't", 'has', "hasn't", 'have', "haven't", 'having', 'he', "he'd", "he'll", "he's", 'her', 'here', "here's", 'hers', 'herself', 'him', 'himself', 'his', 'how', "how's",
-            'i', "i'd", "i'll", "i'm", "i've", 'if', 'in', 'into', 'is', "isn't", 'it', "it's", 'its', 'itself',
-            "let's",
-            'me', 'more', 'most', "mustn't", 'my', 'myself',
-            'no', 'nor', 'not',
-            'of', 'off', 'on', 'once', 'only', 'or', 'other', 'ought', 'our', 'ours', 'ourselves', 'out', 'over', 'own',
-            'same', "shan't", 'she', "she'd", "she'll", "she's", 'should', "shouldn't", 'so', 'some', 'such',
-            'than', 'that', "that's", 'the', 'their', 'theirs', 'them', 'themselves', 'then', 'there', "there's", 'these', 'they', "they'd", "they'll", "they're", "they've", 'this', 'those', 'through', 'to', 'too',
-            'under', 'until', 'up',
-            'very',
-            'was', "wasn't", 'we', "we'd", "we'll", "we're", "we've", 'were', "weren't", 'what', "what's", 'when', "when's", 'where', "where's", 'which', 'while', 'who', "who's", 'whom', 'why', "why's", 'with', "won't",
-            'would', "wouldn't",
-            'you', "you'd", "you'll", "you're", "you've", 'your', 'yours', 'yourself', 'yourselves'
-        }
-
-        text = re.sub('<[^<]+?>', '', content)
-        words = re.findall(r'\w+', text.lower())
-        filtered_words = [word for word in words if word not in stop_words]  # Filter out stopwords
-        return filtered_words
-
-    def generate_report(self, filename='report.txt'):
-        with open(filename, 'w') as file:
-            file.write(f"Total unique pages: {len(self.unique_urls)}\n")
-            file.write(f"Longest page: {self.longest_page[0]} with {self.longest_page[1]} words\n")
-            file.write("Most common words:\n")
-            for word, count in self.word_counter.most_common(50):
-                file.write(f"{word}: {count}\n")
-            file.write("Subdomains in ics.uci.edu:\n")
-            for subdomain, count in self.subdomains.items():
-                file.write(f"{subdomain}: {count}\n")
+ 

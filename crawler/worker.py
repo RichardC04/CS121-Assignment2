@@ -5,6 +5,7 @@ from utils.download import download
 from utils import get_logger
 import scraper
 import time
+import report
 
 
 class Worker(Thread):
@@ -33,3 +34,4 @@ class Worker(Thread):
                 self.frontier.add_url(scraped_url)
             self.frontier.mark_url_complete(tbd_url)
             time.sleep(self.config.time_delay)
+            report.generate_report() # with insufficient time, tried to generate report after scraping each link to make sure that there is a report.
