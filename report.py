@@ -44,12 +44,14 @@ class Report():
     
     def computeWordFrequencies(self, token_list):
         frequencies = {}
-        for token in token_list and token not in self.stop_words:
-            if token in frequencies:
-                frequencies[token] += 1
-            else:
-                frequencies[token] = 1
+        for token in token_list:
+            if token not in self.stop_words:
+                if token in frequencies:
+                    frequencies[token] += 1
+                else:
+                    frequencies[token] = 1
         return frequencies
+
 
     def add_current_link_data(self, soup, resp):
         tokens = self.tokenize(soup.get_text(separator=' ', strip=True))
