@@ -4,7 +4,9 @@ from urllib.parse import urlparse, urljoin
 from urllib.robotparser import RobotFileParser
 from simhash_detection import page_content, detect_near_duplicates
 
-import report
+from report import Report
+
+report_instance = Report()
 
 def scraper(url, resp):
     links = extract_next_links(url, resp)
@@ -52,7 +54,7 @@ def extract_next_links(url, resp):
     if resp.status != 200 or not resp.raw_response:
         return []  # Ignore non-200 responses and empty content
     soup = BeautifulSoup(resp.raw_response.content, 'html.parser')
-    report.add_current_link_data(soup, resp)
+    report_instance.add_current_link_data(soup, resp)
     content = extract_content(soup)
     if error_content(content):
         return []
@@ -64,7 +66,7 @@ def extract_next_links(url, resp):
         abs_url = urljoin(resp.url, link['href'])
         if is_valid(abs_url) and can_fetch_robot(abs_url):
             found_links.add(abs_url)
-            report.add_current_url_and_ics_subdomain(abs_url)
+            report_instance.add_current_url_and_ics_subdomain(abs_url)
     return list(found_links)
 
 def is_valid(url):
@@ -98,3 +100,5 @@ def is_valid(url):
         print ("TypeError for ", parsed)
         raise
 
+def generate_current_report():
+    report_instance.generate_report()
