@@ -12,9 +12,10 @@ def scraper(url, resp):
     links = extract_next_links(url, resp)
     return [link for link in links if is_valid(link)]
 
-def extract_content(soup):
+def extract_content(html_content):
     """Extract plain text content from HTML, 
     removing all scripts and styles."""
+    soup = BeautifulSoup(html_content, 'html.parser')
     for script_or_style in soup(["script", "style"]):
         script_or_style.decompose()
     text = soup.get_text()
@@ -23,15 +24,7 @@ def extract_content(soup):
     text = '\n'.join(chunk for chunk in chunks if chunk)
     return text
 
-def error_content(content):
-    error_indicators = [
-        "404 Not Found", "Error 404", "Page Not Found",
-        "Sorry, we couldn’t find that page", "The requested URL was not found"
-    ]
-    for indicator in error_indicators:
-        if indicator.lower() in content.lower():
-            return True
-    return False
+
 
 robots_cache = {}
 def can_fetch_robot(url):
@@ -53,14 +46,17 @@ def extract_next_links(url, resp):
     # Return a list with the hyperlinks (as strings) scrapped from resp.raw_response.content
     if resp.status != 200 or not resp.raw_response or not resp.raw_response.content:
         return []  # Ignore non-200 responses and empty content
-    soup = BeautifulSoup(resp.raw_response.content, 'html.parser')
-    report_instance.add_current_link_data(soup, resp)
-    content = extract_content(soup)
-    if error_content(content):
-        return []
+    # soup = BeautifulSoup(resp.raw_response.content, 'html.parser')
+    #report_instance.add_current_link_data(soup, resp)
+    # content = extract_content(soup)
+    content = extract_content(resp.raw_response.content)
     page_simhash = page_content(url, content)
+    # if error_content(content):
+    #   return []
+    # page_simhash = page_content(url, content)
     if detect_near_duplicates(url, page_simhash):
         return [] #Ignore urls with great page similarity
+    soup = BeautifulSoup(resp.raw_response.content, 'html.parser')
     found_links = set()
     for link in soup.find_all('a', href=True):
         abs_url = urljoin(resp.url, link['href'])
@@ -77,7 +73,7 @@ def is_valid(url):
         parsed = urlparse(url)
         if parsed.scheme not in set(["http", "https"]):
             return False
-        valid_domains = [
+        """valid_domains = [
             "ics.uci.edu",
             "cs.uci.edu",
             "informatics.uci.edu",
@@ -85,7 +81,16 @@ def is_valid(url):
         ]
         domain = parsed.netloc
         if not any(domain == d or domain.endswith('.' + d)for d in valid_domains):
-            return False #exclude urls invalid domains
+            return False #exclude urls invalid domains"""
+        valid_domains = [
+            ".ics.uci.edu",
+            ".cs.uci.edu",
+            ".informatics.uci.edu",
+            ".stat.uci.edu"
+        ]
+        domain = parsed.netloc
+        if not any(domain.endswith(d) for d in valid_domains):
+            return False
         return not re.match(
             r".*\.(css|js|bmp|gif|jpe?g|ico"
             + r"|png|tiff?|mid|mp2|mp3|mp4"

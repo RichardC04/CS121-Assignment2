@@ -7,10 +7,10 @@ def simple_hash(value, hash_bits=64):
         hash_value += ord(char)
     return hash_value % (1 << hash_bits)
 
-def tokenize(text):
-    """tokenize
-    the content in urls
-    """
+"""def tokenize(text):
+    # okenize
+    # the content in urls
+    # 
     tokens = []
     temp_word = ''
     for char in text:
@@ -22,7 +22,7 @@ def tokenize(text):
                 temp_word = ''  # Reset
     if temp_word:
         tokens.append(temp_word) 
-    return tokens
+    return tokens"""
 
 def simhash(features, hash_bits=64):
     """
@@ -52,7 +52,7 @@ def hamming_distance(hash1, hash2):
     return distance
 
 def calculate_features(text):
-    words = tokenize(text)
+    words = words = text.split()
     weights = {}
     for word in words:
         weights[word] = weights.get(word, 0) + 1
