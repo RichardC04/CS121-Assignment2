@@ -26,8 +26,7 @@ def tokenize(text):
 
 def simhash(features, hash_bits=64):
     """
-    compute the simhash of the provided features
-    """
+    compute the simhash of the provided features"""
     v = [0] * hash_bits
     for feature, weight in features.items():
         hash_value = simple_hash(feature, hash_bits)

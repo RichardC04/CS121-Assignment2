@@ -4,8 +4,6 @@ from urllib.parse import urlparse, urljoin
 from urllib.robotparser import RobotFileParser
 from simhash_detection import page_content, detect_near_duplicates
 
-import report
-
 def scraper(url, resp):
     links = extract_next_links(url, resp)
     return [link for link in links if is_valid(link)]
@@ -21,12 +19,22 @@ def extract_content(soup):
     text = '\n'.join(chunk for chunk in chunks if chunk)
     return text
 
+def error_content(content):
+    error_indicators = [
+        "404 Not Found", "Error 404", "Page Not Found",
+        "Sorry, we couldn’t find that page", "The requested URL was not found"
+    ]
+    for indicator in error_indicators:
+        if indicator.lower() in content.lower():
+            return True
+    return False
+
 robots_cache = {}
 def can_fetch_robot(url):
     parsed_url = urlparse(url)
     root_url = f"{parsed_url.scheme}://{parsed_url.netloc}"
     if root_url not in robots_cache:
-        rp = RobotFileParser()
+        rp = RobotFileParser() # use the RobotFileParser to parse robot.txt
         rp.set_url(f"{root_url}/robots.txt")
         rp.read()
         robots_cache[root_url] = rp
@@ -39,22 +47,20 @@ def extract_next_links(url, resp):
     #         resp.raw_response.url: the url, again
     #         resp.raw_response.content: the content of the page!
     # Return a list with the hyperlinks (as strings) scrapped from resp.raw_response.content
-    if resp.status != 200 or not resp.raw_response:
+    if resp.status != 200 or not resp.raw_response or not resp.raw_response.content:
         return []  # Ignore non-200 responses and empty content
-    content = extract_content(resp.raw_response.content)
+    soup = BeautifulSoup(resp.raw_response.content, 'html.parser')
+    content = extract_content(soup)
+    if error_content(content):
+        return []
     page_simhash = page_content(url, content)
     if detect_near_duplicates(url, page_simhash):
-        return []
-    soup = BeautifulSoup(resp.raw_response.content, 'html.parser')
-    report.add_current_link_data(soup, resp)
+        return [] #Ignore urls with great page similarity
     found_links = set()
     for link in soup.find_all('a', href=True):
         abs_url = urljoin(resp.url, link['href'])
         if is_valid(abs_url) and can_fetch_robot(abs_url):
             found_links.add(abs_url)
-            report.add_current_url_and_ics_subdomain(abs_url)
-
-
     return list(found_links)
 
 def is_valid(url):
@@ -66,14 +72,14 @@ def is_valid(url):
         if parsed.scheme not in set(["http", "https"]):
             return False
         valid_domains = [
-            ".ics.uci.edu",
-            ".cs.uci.edu",
-            ".informatics.uci.edu",
-            ".stat.uci.edu"
+            "ics.uci.edu",
+            "cs.uci.edu",
+            "informatics.uci.edu",
+            "stat.uci.edu"
         ]
         domain = parsed.netloc
-        if not any(domain.endswith(d) for d in valid_domains):
-            return False
+        if not any(domain == d or domain.endswith('.' + d)for d in valid_domains):
+            return False #exclude urls invalid domains
         return not re.match(
             r".*\.(css|js|bmp|gif|jpe?g|ico"
             + r"|png|tiff?|mid|mp2|mp3|mp4"
@@ -87,3 +93,4 @@ def is_valid(url):
     except TypeError:
         print ("TypeError for ", parsed)
         raise
+
