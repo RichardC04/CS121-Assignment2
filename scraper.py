@@ -52,7 +52,7 @@ def extract_next_links(url, resp):
         abs_url = urljoin(resp.url, link['href'])
         if is_valid(abs_url) and can_fetch_robot(abs_url):
             found_links.add(abs_url)
-            report.add_current_url_to_set(abs_url)
+            report.add_current_url_and_ics_subdomain(abs_url)
 
 
     return list(found_links)

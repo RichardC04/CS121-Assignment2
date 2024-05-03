@@ -1,3 +1,5 @@
+from urllib.parse import urlparse
+
 class Report():
     def __init__(self):
         self.longest_page = ''
@@ -56,8 +58,14 @@ class Report():
             self.longest_page_length = len(tokens)
         self.total_tokens.append(tokens)
     
-    def add_current_url_to_set(self, url):
+    def add_current_url_and_ics_subdomain(self, url):
         self.unique_urls.add(url)
+        parsed = urlparse(url)
+        if parsed.netloc.endswith(".ics.uci.edu") and parsed.netloc != "www.ics.uci.edu":
+            if parsed.netloc in self.subdomains:
+                self.subdomains[parsed.netloc] += 1
+            else:
+                self.subdomains[parsed.netloc] = 1
 
     def generate_report(self, filename='report.txt'):
         with open(filename, 'w') as file:
