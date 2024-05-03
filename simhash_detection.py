@@ -3,9 +3,9 @@ simhashes = {}
 def simple_hash(value, hash_bits=64):
     hash_value = 0 # Set the initial value to zero
     for i, char in enumerate(value):
-        hash_value += (ord(char) << i)
-    hash_value = hash_value % (1 << hash_bits)
-    return hash_value
+        hash_value = (hash_value << 1) ^ (hash_value >> (hash_bits - 1))
+        hash_value += ord(char)
+    return hash_value % (1 << hash_bits)
 
 def tokenize(text):
     """tokenize
@@ -65,11 +65,12 @@ def page_content(url, content):
     simhashes[url] = page_simhash
     return page_simhash
 
-def detect_near_duplicates(url, new_simhash):
-    threshold = 5  # Provide a decent thrshold, 5 indicates to ingnore pages with about 92% similarity
+def detect_near_duplicates(url, new_simhash, threshold = 5):
+    """ Provide a decent thrshold, 5 indicates to ingnore pages with about 92% similarity"""
+    global simhashes
     for existing_url, existing_simhash in simhashes.items():
         if hamming_distance(new_simhash, existing_simhash) < threshold:
-            simhashes[url] = new_simhash
+            # simhashes[url] = new_simhash
             return True
     simhashes[url] = new_simhash
     return False
