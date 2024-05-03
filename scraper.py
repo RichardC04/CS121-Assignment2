@@ -24,7 +24,7 @@ def can_fetch_robot(url):
     parsed_url = urlparse(url)
     root_url = f"{parsed_url.scheme}://{parsed_url.netloc}"
     if root_url not in robots_cache:
-        rp = RobotFileParser()
+        rp = RobotFileParser() # use the RobotFileParser to parse robot.txt
         rp.set_url(f"{root_url}/robots.txt")
         rp.read()
         robots_cache[root_url] = rp
@@ -46,13 +46,12 @@ def extract_next_links(url, resp):
     content = extract_content(soup)
     page_simhash = page_content(url, content)
     if detect_near_duplicates(url, page_simhash):
-        return []
+        return [] #Ignore urls with great page similarity
     found_links = set()
     for link in soup.find_all('a', href=True):
         abs_url = urljoin(resp.url, link['href'])
         if is_valid(abs_url) and can_fetch_robot(abs_url):
             found_links.add(abs_url)
-
     return list(found_links)
 
 def is_valid(url):
@@ -71,7 +70,7 @@ def is_valid(url):
         ]
         domain = parsed.netloc
         if not any(domain == d or domain.endswith('.' + d)for d in valid_domains):
-            return False
+            return False #exclude urls invalid domains
         return not re.match(
             r".*\.(css|js|bmp|gif|jpe?g|ico"
             + r"|png|tiff?|mid|mp2|mp3|mp4"
