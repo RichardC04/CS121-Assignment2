@@ -40,13 +40,13 @@ def extract_next_links(url, resp):
     #         resp.raw_response.url: the url, again
     #         resp.raw_response.content: the content of the page!
     # Return a list with the hyperlinks (as strings) scrapped from resp.raw_response.content
-    if resp.status != 200 or not resp.raw_response or resp.raw_response.content:
+    if resp.status != 200 or not resp.raw_response or not resp.raw_response.content:
         return []  # Ignore non-200 responses and empty content
-    content = extract_content(resp.raw_response.content)
+    soup = BeautifulSoup(resp.raw_response.content, 'html.parser')
+    content = extract_content(soup)
     page_simhash = page_content(url, content)
     if detect_near_duplicates(url, page_simhash):
         return []
-    soup = BeautifulSoup(resp.raw_response.content, 'html.parser')
     found_links = set()
     for link in soup.find_all('a', href=True):
         abs_url = urljoin(resp.url, link['href'])
@@ -70,7 +70,7 @@ def is_valid(url):
             "stat.uci.edu"
         ]
         domain = parsed.netloc
-        if not any(domain == d or domain.endwith('.' + d)for d in valid_domains):
+        if not any(domain == d or domain.endswith('.' + d)for d in valid_domains):
             return False
         return not re.match(
             r".*\.(css|js|bmp|gif|jpe?g|ico"
