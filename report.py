@@ -58,7 +58,7 @@ class Report():
         if len(tokens) > self.longest_page_length:
             self.longest_page = resp.url
             self.longest_page_length = len(tokens)
-        self.total_tokens.append(tokens)
+        self.total_tokens.extend(tokens)
     
     def add_current_url_and_ics_subdomain(self, url):
         self.unique_urls.add(url)
@@ -74,7 +74,8 @@ class Report():
             file.write(f"Total unique pages: {len(self.unique_urls)}\n\n")
             file.write(f"Longest page: {self.longest_page} with {self.longest_page_length} words\n\n")
             file.write("Most common words:\n")
-            words = self.computeWordFrequencies(self.total_tokens)
+            flat_tokens = [token for sublist in self.total_tokens for token in sublist]
+            words = self.computeWordFrequencies(flat_tokens)
             sorted_words = sorted(words.items(), key=lambda x: x[1], reverse=True)
             # Write the top 50 words
             for word, count in sorted_words[:50]:
