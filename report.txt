@@ -1,5 +1,40 @@
 Total unique pages: 0
 
-Longest page: https://www.informatics.uci.edu with 623 words
+Longest page: https://www.cs.uci.edu with 571 words
 
 Most common words:
+e: 584
+t: 460
+s: 425
+r: 404
+o: 362
+n: 350
+c: 303
+d: 184
+u: 170
+l: 169
+p: 168
+m: 163
+h: 121
+f: 112
+g: 99
+y: 61
+b: 56
+2: 53
+w: 46
+v: 37
+0: 25
+1: 19
+k: 12
+j: 9
+x: 8
+q: 5
+z: 4
+8: 3
+7: 3
+3: 2
+9: 2
+6: 2
+4: 1
+
+Subdomains in ics.uci.edu:
